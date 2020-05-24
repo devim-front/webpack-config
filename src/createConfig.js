@@ -366,12 +366,14 @@ const createConfig = (_, args) => {
         }),
       ]),
       ...when(isClient, [
-        new CopyWebpackPlugin([
-          {
-            from: publicPath,
-            to: outputPath,
-          },
-        ]),
+        new CopyWebpackPlugin({
+          patterns: [
+            {
+              from: publicPath,
+              to: outputPath,
+            },
+          ],
+        }),
         new HtmlWebpackPlugin({ template }),
         new CompressionPlugin(),
         new LoadablePlugin(),
