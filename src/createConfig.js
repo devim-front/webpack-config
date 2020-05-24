@@ -332,10 +332,8 @@ const createConfig = (_, args) => {
           include: sourcePath,
           use: [
             {
-              loader: 'url-loader',
+              loader: 'file-loader',
               options: {
-                limit: 1024 * 1,
-                fallback: 'file-loader',
                 outputPath: 'assets',
                 emitFile: isClient,
               },
