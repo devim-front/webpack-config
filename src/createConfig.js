@@ -19,12 +19,16 @@ const TerserPlugin = require('terser-webpack-plugin');
 const StatsPlugin = require('webpack-visualizer-plugin');
 const HashPlugin = require('hash-webpack-plugin');
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
-const MomentPlugin = require('moment-locales-webpack-plugin');
 const LoadablePlugin = require('@loadable/webpack-plugin');
 
 const { LimitChunkCountPlugin } = optimize;
 
-const createConfig = (_, args) => {
+/**
+ * Создает экземпляр конфигурации webpack.
+ * @param {Object} _env Коллекция переменных окружения, заданных через webpack.
+ * @param {Object} args Коллекция флагов коммандной строки.
+ */
+const createConfig = (_env, args) => {
   const defaultOptions = {
     NODE_ENV: 'development',
     APP_TARGET: 'web',
@@ -39,7 +43,6 @@ const createConfig = (_, args) => {
     APP_TEMPLATE: 'index',
     APP_LISTEN: '8000',
     APP_DEV_LISTEN: '3000',
-    APP_LOCALES: 'en,de,es',
   };
 
   const when = (condition, value) => {
@@ -141,8 +144,6 @@ const createConfig = (_, args) => {
 
   const devListen = parseNumber(options.APP_DEV_LISTEN);
   const listen = parseNumber(options.APP_LISTEN);
-
-  const locales = parseArray(options.APP_LOCALES);
 
   const env = {
     ...removeEnvOptions({
@@ -346,7 +347,6 @@ const createConfig = (_, args) => {
       new HashedModuleIdsPlugin(),
       new DefinePlugin(stringifyEnv(env)),
       new CheckerPlugin(),
-      new MomentPlugin({ localesToKeep: locales }),
       new CssPlugin({
         filename: 'css/[name].[contenthash].css',
         esModule: true,
