@@ -1,55 +1,30 @@
-import path from 'path';
-import fs from 'fs';
-import ps, { ChildProcess } from 'child_process';
-import HtmlWebpackPlugin from 'html-webpack-plugin';
-import {
-  DefinePlugin,
-  HashedModuleIdsPlugin,
-  optimize,
-  Compiler,
-} from 'webpack';
-import CopyWebpackPlugin from 'copy-webpack-plugin';
-import CssPlugin from 'mini-css-extract-plugin';
-import externals from 'webpack-node-externals';
-import Fiber from 'fibers';
-import sass from 'sass';
-import dotenv from 'dotenv';
-import CompressionPlugin from 'compression-webpack-plugin';
-import { TsConfigPathsPlugin, CheckerPlugin } from 'awesome-typescript-loader';
-import OptimizeCssAssetsPlugin from 'optimize-css-assets-webpack-plugin';
-import TerserPlugin from 'terser-webpack-plugin';
-import LoadablePlugin from '@loadable/webpack-plugin';
-import FriendlyErrorsPlugin from 'friendly-errors-webpack-plugin';
-// @ts-ignore
-import StatsPlugin from 'webpack-visualizer-plugin';
-// @ts-ignore
-import HashPlugin from 'hash-webpack-plugin';
-// @ts-ignore
-import MomentPlugin from 'moment-locales-webpack-plugin';
+const path = require('path');
+const fs = require('fs');
+const ps = require('child_process');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { DefinePlugin, HashedModuleIdsPlugin, optimize } = require('webpack');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const CssPlugin = require('mini-css-extract-plugin');
+const externals = require('webpack-node-externals');
+const Fiber = require('fibers');
+const sass = require('sass');
+const dotenv = require('dotenv');
+const CompressionPlugin = require('compression-webpack-plugin');
+const {
+  TsConfigPathsPlugin,
+  CheckerPlugin,
+} = require('awesome-typescript-loader');
+const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
+const StatsPlugin = require('webpack-visualizer-plugin');
+const HashPlugin = require('hash-webpack-plugin');
+const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
+const MomentPlugin = require('moment-locales-webpack-plugin');
+const LoadablePlugin = require('@loadable/webpack-plugin');
 
 const { LimitChunkCountPlugin } = optimize;
 
-/**
- * Коллекция переменных.
- */
-type Collection = Record<string, string>;
-
-/**
- * Необработанная коллекция переменных окружения.
- */
-type RawEnv = Record<string, string | undefined>;
-
-/**
- * Обработанная коллекция переменных окружения.
- */
-type Env = Record<string, any>;
-
-/**
- * Создает конфигурацию webpack.
- * @param _env Коллекция переменных среды, объявленных через webpack.
- * @param args Коллекция аргументов командной строки.
- */
-export const createConfig = (_env: Collection, args: Collection) => {
+const createConfig = (_, args) => {
   const defaultOptions = {
     NODE_ENV: 'development',
     APP_TARGET: 'web',
@@ -67,48 +42,48 @@ export const createConfig = (_env: Collection, args: Collection) => {
     APP_LOCALES: 'en,de,es',
   };
 
-  const when = <T>(condition: boolean, value: T): T => {
+  const when = (condition, value) => {
     const defaults = Array.isArray(value) ? [] : {};
-    return (condition ? value : defaults) as T;
+    return condition ? value : defaults;
   };
 
-  const parseArray = (value: string) =>
+  const parseArray = (value) =>
     value.split(',').map((item) => item.replace(/^\s+|\s+$/, ''));
 
-  const parseNumber = (value: string) =>
+  const parseNumber = (value) =>
     value == null || value === '' || Number.isNaN(Number(value))
       ? undefined
       : Number(value);
 
-  const filterEnv = (env: RawEnv): RawEnv =>
+  const filterEnv = (env) =>
     Object.keys(env).reduce(
       (previous, key) =>
         key === 'NODE_ENV' || /^APP_\w+$/.test(key)
           ? { ...previous, [key]: env[key] }
           : previous,
-      {} as RawEnv
+      {}
     );
 
-  const parseEnv = (file: string): RawEnv =>
+  const parseEnv = (file) =>
     filterEnv(dotenv.config({ path: file }).parsed || {});
 
-  const stringifyEnv = (env: Env): Env =>
+  const stringifyEnv = (env) =>
     Object.keys(env).reduce(
       (result, key) => ({
         ...result,
         [`process.env.${key}`]: JSON.stringify(env[key]),
       }),
-      {} as Env
+      {}
     );
 
-  const removeEnvOptions = (env: RawEnv): RawEnv =>
+  const removeEnvOptions = (env) =>
     Object.keys(env).reduce(
       (result, key) =>
         key in defaultOptions ? result : { ...result, [key]: env[key] },
-      {} as RawEnv
+      {}
     );
 
-  const findFile = (folder: string, extensions: string[], name: string) =>
+  const findFile = (folder, extensions, name) =>
     extensions
       .map((ext) => path.resolve(folder, `${name}${ext}`))
       .find(fs.existsSync);
@@ -164,8 +139,8 @@ export const createConfig = (_env: Collection, args: Collection) => {
     options.APP_TEMPLATE
   );
 
-  const devListen = parseNumber(options.APP_DEV_LISTEN) as number;
-  const listen = parseNumber(options.APP_LISTEN) as number;
+  const devListen = parseNumber(options.APP_DEV_LISTEN);
+  const listen = parseNumber(options.APP_LISTEN);
 
   const locales = parseArray(options.APP_LOCALES);
 
@@ -207,13 +182,13 @@ export const createConfig = (_env: Collection, args: Collection) => {
         writeToDisk: true,
         proxy: {},
         ...when(isServer, {
-          before: (_app: any, _server: any, compiler: Compiler) => {
-            let child: ChildProcess | undefined;
+          before: (_app, _server, compiler) => {
+            let child = null;
 
             compiler.hooks.done.tap('webpack.config.js', (stats) => {
               if (child) {
                 child.kill();
-                child = undefined;
+                child = null;
               }
 
               if (stats.hasErrors()) {
@@ -221,11 +196,8 @@ export const createConfig = (_env: Collection, args: Collection) => {
               }
 
               const file = path.resolve(outputPath, 'server.js');
-
-              child = ps.fork(file, undefined, {
-                silent: true,
-                stdio: [1, 2, 3, 'ipc'],
-              });
+              const opts = { silent: true, stdio: [1, 2, 3, 'ipc'] };
+              child = ps.fork(file, {}, opts);
             });
           },
         }),
@@ -257,18 +229,9 @@ export const createConfig = (_env: Collection, args: Collection) => {
           cacheGroups: {
             vendor: {
               test: /[\\/]node_modules[\\/]/,
-              name: (module: any) => {
-                const context = module.context as string;
-
+              name: ({ context }) => {
                 const pattern = /[\\/]node_modules[\\/](.*?)([\\/]|$)/;
-                const match = context.match(pattern);
-
-                if (match == null) {
-                  return 'main';
-                }
-
-                const [, name] = match;
-
+                const [, name] = context.match(pattern);
                 return `npm.${name.replace('@', '')}`;
               },
             },
@@ -357,7 +320,7 @@ export const createConfig = (_env: Collection, args: Collection) => {
                 sourceMap: isDevelopment,
                 implementation: sass,
                 sassOptions: {
-                  fiber: Fiber as any,
+                  fiber: Fiber,
                   includePaths: [sourcePath],
                 },
               },
@@ -369,8 +332,10 @@ export const createConfig = (_env: Collection, args: Collection) => {
           include: sourcePath,
           use: [
             {
-              loader: 'file-loader',
+              loader: 'url-loader',
               options: {
+                limit: 1024 * 1,
+                fallback: 'file-loader',
                 outputPath: 'assets',
                 emitFile: isClient,
               },
@@ -391,7 +356,6 @@ export const createConfig = (_env: Collection, args: Collection) => {
       }),
       ...when(isDevServer, [
         new FriendlyErrorsPlugin({
-          // @ts-ignore
           compilationSuccessInfo: {
             notes: [
               isClient
@@ -425,3 +389,5 @@ export const createConfig = (_env: Collection, args: Collection) => {
     ],
   };
 };
+
+module.exports = { createConfig };

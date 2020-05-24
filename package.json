@@ -8,9 +8,6 @@
     "access": "public"
   },
   "scripts": {
-    "build:drop": "rimraf build",
-    "build:make": "tsc",
-    "build": "run-s build:*",
     "release": "np && npm publish"
   },
   "keywords": [
