@@ -13,7 +13,9 @@ npm i -D webpack typesciprt @babel/core
 2. Подключите библиотеку в dev-зависимости проекта:
 
 ```bash
+
 npm i -D @devim-front/webpack-config
+
 ```
 
 3. Создайте файл `webpack.config.js` в корне своего проекта со следующим содержанием:
@@ -34,3 +36,7 @@ module.exports = (env, args) =>
 5. Создайте файл `.babelrc` в корне своего проекта. Рекомендуется использовать общую конфигурацию из пакета [@devim-front/babel-config](https://www.npmjs.com/package/@devim-front/babel-config).
 
 6. Создайте файл `.postcssrc.js` в корне проекта. Рекомендуется использовать общую конфигурацию из пакета [@devim-front/postcss-config](https://www.npmjs.com/package/@devim-front/postcss-config).
+
+## API
+
+В данном разделе представлено описание функций библиотеки.

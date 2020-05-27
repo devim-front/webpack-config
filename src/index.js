@@ -1,5 +1,4 @@
-const { createConfig } = require('./createConfig');
-
 module.exports = {
-  createConfig,
+  ...require('./createConfig'),
+  ...require('./addPlugins'),
 };
