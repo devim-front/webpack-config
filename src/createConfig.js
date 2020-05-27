@@ -239,6 +239,10 @@ const createConfig = (_env, args, options = {}) => {
               use: [],
             },
             {
+              test: /\.(html|ejs)$/,
+              use: [],
+            },
+            {
               test: /\.(s[ac]|c)ss$/,
               sideEffects: true,
               use: [
