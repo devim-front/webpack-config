@@ -1,4 +1,5 @@
 const dotenv = require('dotenv');
+const { filterEnv } = require('./filterEnv');
 
 /**
  * Синхронно считывает коллекцию переменных окружения из указанного файла.
