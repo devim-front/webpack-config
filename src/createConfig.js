@@ -226,7 +226,7 @@ const createConfig = (_env, args, options = {}) => {
               ],
             },
             {
-              test: /\.jsx?$/,
+              test: /\.js(x|on)?$/,
               use: [
                 {
                   loader: 'babel-loader',
