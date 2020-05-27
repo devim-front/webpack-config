@@ -226,13 +226,17 @@ const createConfig = (_env, args, options = {}) => {
               ],
             },
             {
-              test: /\.js(x|on)?$/,
+              test: /\.jsx?$/,
               use: [
                 {
                   loader: 'babel-loader',
                   options: {},
                 },
               ],
+            },
+            {
+              test: /\.json$/,
+              use: [],
             },
             {
               test: /\.(s[ac]|c)ss$/,
