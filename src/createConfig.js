@@ -106,7 +106,7 @@ const createConfig = (_env, args, options = {}) => {
     APP_LISTEN: port,
   };
 
-  const { outputFiles, outputHtml, outputCss, outputJs } = opts;
+  const { outputFiles, outputHtml, outputCss, outputJs, proxy } = opts;
 
   return {
     context,
