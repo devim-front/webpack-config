@@ -119,7 +119,7 @@ module.exports = (env, args) =>
     rootPath: __dirname,
     client: {
       entry: 'index',
-      port: 300,
+      port: 3000,
     },
     server: {
       entry: 'server/index',
