@@ -49,7 +49,7 @@ const createConfig = (_env, args, options = {}) => {
 
   const defaultOptions = {
     rootPath: process.cwd(),
-    publicPath: undefined,
+    publicPath: './public',
     outputPath: './build',
     sourcePath: './src',
     entry: isClient ? 'index' : 'server/index',
@@ -57,7 +57,6 @@ const createConfig = (_env, args, options = {}) => {
     outputHtml: 'index.html',
     outputCss: 'css/[name].[contenthash].css',
     outputJs: isClient ? 'js/[name].[contenthash].js' : 'server.js',
-    stats: { children: false },
     proxy: {},
     port: 8000,
     server: {},
@@ -87,7 +86,7 @@ const createConfig = (_env, args, options = {}) => {
   const cachePath = path.resolve(modulesPath, '.cache');
   const sourcePath = path.resolve(context, opts.sourcePath);
   const outputPath = path.resolve(context, opts.outputPath);
-  const publicPath = opts.publicPath && path.resolve(context, opts.publicPath);
+  const publicPath = opts.publicPath !== false && path.resolve(context, opts.publicPath);
 
   const entryExtensions = ['.tsx', '.ts', '.jsx', '.js', '.json'];
   const entry = findFile(sourcePath, entryExtensions, opts.entry);
@@ -107,7 +106,7 @@ const createConfig = (_env, args, options = {}) => {
     APP_LISTEN: port,
   };
 
-  const { outputFiles, outputHtml, outputCss, outputJs, proxy, stats } = opts;
+  const { outputFiles, outputHtml, outputCss, outputJs, proxy } = opts;
 
   return {
     context,
@@ -124,15 +123,14 @@ const createConfig = (_env, args, options = {}) => {
       }),
     },
     externals: isServer ? [externals()] : undefined,
-    stats,
+    stats: { children: false },
     devtool: isDevelopment && isClient ? 'source-map' : undefined,
     devServer: {
       proxy,
       quiet: true,
-      contentBase: publicPath || false,
+      contentBase: publicPath !== false && publicPath,
       historyApiFallback: true,
       host: 'localhost',
-      stats,
       port: isClient ? port : port + 1,
       writeToDisk: true,
       ...when(isServer, {
@@ -245,37 +243,17 @@ const createConfig = (_env, args, options = {}) => {
               use: [],
             },
             {
-              test: /\.css$/,
-              use: [
-                ...(isClient ? [{
-                  loader: CssPlugin.loader,
-                  options: {
-                    hmr: isDevServer,
-                  }
-                }] : []),
-                {
-                  loader: 'css-loader',
-                  options: {
-                    sourceMap: isDevelopment,
-                    onlyLocals: isServer,
-                  }
-                },
-              ]
-            },
-            {
-              test: /\.s[ac]ss$/,
+              test: /\.(s[ac]|c)ss$/,
               sideEffects: true,
               use: [
-                ...(isClient
-                  ? [
-                      {
-                        loader: CssPlugin.loader,
-                        options: {
-                          hmr: isDevServer
-                        },
-                      },
-                    ]
-                  : []),
+                ...when(isClient, [
+                  {
+                    loader: CssPlugin.loader,
+                    options: {
+                      hmr: isDevServer
+                    },
+                  },
+                ]),
                 {
                   loader: 'css-loader',
                   options: {
@@ -355,7 +333,7 @@ const createConfig = (_env, args, options = {}) => {
         }),
       ]),
       ...when(isClient, [
-        ...(publicPath ? [
+        ...(publicPath !== false ? [
           new CopyWebpackPlugin({
             patterns: [
               {
