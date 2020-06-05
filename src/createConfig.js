@@ -81,12 +81,13 @@ const createConfig = (_env, args, options = {}) => {
 
   const systemEnv = filterEnv(process.env);
 
+  const isPublic = opts.publicPath !== false;
   const tsConfigPath = path.resolve(context, 'tsconfig.json');
   const modulesPath = path.resolve(context, 'node_modules');
   const cachePath = path.resolve(modulesPath, '.cache');
   const sourcePath = path.resolve(context, opts.sourcePath);
   const outputPath = path.resolve(context, opts.outputPath);
-  const publicPath = opts.publicPath !== false && path.resolve(context, opts.publicPath);
+  const publicPath = isPublic && path.resolve(context, opts.publicPath);
 
   const entryExtensions = ['.tsx', '.ts', '.jsx', '.js', '.json'];
   const entry = findFile(sourcePath, entryExtensions, opts.entry);
@@ -128,7 +129,7 @@ const createConfig = (_env, args, options = {}) => {
     devServer: {
       proxy,
       quiet: true,
-      contentBase: publicPath !== false && publicPath,
+      contentBase: isPublic && publicPath,
       historyApiFallback: true,
       host: 'localhost',
       port: isClient ? port : port + 1,
@@ -332,7 +333,7 @@ const createConfig = (_env, args, options = {}) => {
         }),
       ]),
       ...when(isClient, [
-        ...(publicPath !== false ? [
+        ...(isPublic ? [
           new CopyWebpackPlugin({
             patterns: [
               {
