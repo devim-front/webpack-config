@@ -19,13 +19,7 @@ const HashPlugin = require('hash-webpack-plugin');
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
 const LoadablePlugin = require('@loadable/webpack-plugin');
 
-const {
-  stringifyEnv,
-  filterEnv,
-  findFile,
-  readEnv,
-  when,
-} = require('./helpers');
+const { stringifyEnv, filterEnv, findFile, readEnv } = require('./helpers');
 
 const { LimitChunkCountPlugin } = optimize;
 
@@ -66,8 +60,8 @@ const createConfig = (_env, args, options = {}) => {
   const opts = {
     ...defaultOptions,
     ...options,
-    ...when(isServer, options.server || {}),
-    ...when(isClient, options.client || {}),
+    ...(isServer ? options.server || {} : {}),
+    ...(isClient ? options.client || {} : {}),
   };
 
   const { rootPath: context } = opts;
@@ -81,12 +75,16 @@ const createConfig = (_env, args, options = {}) => {
 
   const systemEnv = filterEnv(process.env);
 
+  const isPublic = opts.publicPath !== false;
+
   const tsConfigPath = path.resolve(context, 'tsconfig.json');
   const modulesPath = path.resolve(context, 'node_modules');
   const cachePath = path.resolve(modulesPath, '.cache');
   const sourcePath = path.resolve(context, opts.sourcePath);
   const outputPath = path.resolve(context, opts.outputPath);
-  const publicPath = path.resolve(context, opts.publicPath);
+  const publicPath = isPublic
+    ? path.resolve(context, opts.publicPath)
+    : undefined;
 
   const entryExtensions = ['.tsx', '.ts', '.jsx', '.js', '.json'];
   const entry = findFile(sourcePath, entryExtensions, opts.entry);
@@ -117,10 +115,12 @@ const createConfig = (_env, args, options = {}) => {
       filename: outputJs,
       path: outputPath,
       publicPath: '/',
-      ...when(isServer, {
-        libraryTarget: 'commonjs2',
-        library: 'main',
-      }),
+      ...(isServer
+        ? {
+            libraryTarget: 'commonjs2',
+            library: 'main',
+          }
+        : {}),
     },
     externals: isServer ? [externals()] : undefined,
     stats: { children: false },
@@ -128,31 +128,33 @@ const createConfig = (_env, args, options = {}) => {
     devServer: {
       proxy,
       quiet: true,
-      contentBase: publicPath,
+      contentBase: isPublic ? publicPath : false,
       historyApiFallback: true,
       host: 'localhost',
       port: isClient ? port : port + 1,
       writeToDisk: true,
-      ...when(isServer, {
-        before: (_app, _server, compiler) => {
-          let child = null;
+      ...(isServer
+        ? {
+            before: (_app, _server, compiler) => {
+              let child = null;
 
-          compiler.hooks.done.tap('webpack.config.js', (stats) => {
-            if (child) {
-              child.kill();
-              child = null;
-            }
+              compiler.hooks.done.tap('webpack.config.js', (stats) => {
+                if (child) {
+                  child.kill();
+                  child = null;
+                }
 
-            if (stats.hasErrors()) {
-              return;
-            }
+                if (stats.hasErrors()) {
+                  return;
+                }
 
-            const file = path.resolve(outputPath, outputJs);
-            const opts = { silent: true, stdio: [1, 2, 3, 'ipc'] };
-            child = ps.fork(file, {}, opts);
-          });
-        },
-      }),
+                const file = path.resolve(outputPath, outputJs);
+                const opts = { silent: true, stdio: [1, 2, 3, 'ipc'] };
+                child = ps.fork(file, {}, opts);
+              });
+            },
+          }
+        : {}),
     },
     resolve: {
       extensions: entryExtensions,
@@ -171,24 +173,26 @@ const createConfig = (_env, args, options = {}) => {
           },
         }),
       ],
-      ...when(isClient, {
-        runtimeChunk: 'single',
-        splitChunks: {
-          chunks: 'all',
-          maxInitialRequests: Infinity,
-          minSize: 0,
-          cacheGroups: {
-            vendor: {
-              test: /[\\/]node_modules[\\/]/,
-              name: ({ context }) => {
-                const pattern = /[\\/]node_modules[\\/](.*?)([\\/]|$)/;
-                const [, name] = context.match(pattern);
-                return `npm.${name.replace('@', '')}`;
+      ...(isClient
+        ? {
+            runtimeChunk: 'single',
+            splitChunks: {
+              chunks: 'all',
+              maxInitialRequests: Infinity,
+              minSize: 0,
+              cacheGroups: {
+                vendor: {
+                  test: /[\\/]node_modules[\\/]/,
+                  name: ({ context }) => {
+                    const pattern = /[\\/]node_modules[\\/](.*?)([\\/]|$)/;
+                    const [, name] = context.match(pattern);
+                    return `npm.${name.replace('@', '')}`;
+                  },
+                },
               },
             },
-          },
-        },
-      }),
+          }
+        : {}),
     },
     module: {
       rules: [
@@ -250,7 +254,9 @@ const createConfig = (_env, args, options = {}) => {
                   ? [
                       {
                         loader: CssPlugin.loader,
-                        options: {},
+                        options: {
+                          hmr: isDevServer,
+                        },
                       },
                     ]
                   : []),
@@ -261,11 +267,17 @@ const createConfig = (_env, args, options = {}) => {
                     localsConvention: 'camelCase',
                     modules: {
                       localIdentName: isDevelopment
-                        ? '[hash:base64]_[name]_[local]'
+                        ? '[name]_[local]_[hash:8]'
                         : '[hash:base64]',
                     },
                     onlyLocals: isServer,
                     esModule: true,
+                  },
+                },
+                {
+                  loader: 'resolve-url-loader',
+                  options: {
+                    root: sourcePath,
                   },
                 },
                 {
@@ -311,42 +323,54 @@ const createConfig = (_env, args, options = {}) => {
         ignoreOrder: true,
         esModule: true,
       }),
-      ...when(isTemplate, [
-        new HtmlWebpackPlugin({
-          template,
-          filename: outputHtml,
-          chunks: ['main'],
-        }),
-      ]),
-      ...when(isDevServer, [
-        new FriendlyErrorsPlugin({
-          compilationSuccessInfo: {
-            notes: [`Application is running at http://localhost:${port}\n`],
-          },
-        }),
-      ]),
-      ...when(isClient, [
-        new CopyWebpackPlugin({
-          patterns: [
-            {
-              from: publicPath,
-              to: outputPath,
-            },
-          ],
-        }),
-        new CompressionPlugin(),
-        new LoadablePlugin(),
-        new HashPlugin({
-          fileName: 'hash.txt',
-          path: outputPath,
-        }),
-        ...when(isDevelopment, [new StatsPlugin()]),
-      ]),
-      ...when(isServer, [
-        new LimitChunkCountPlugin({
-          maxChunks: 1,
-        }),
-      ]),
+      ...(isTemplate
+        ? [
+            new HtmlWebpackPlugin({
+              template,
+              filename: outputHtml,
+              chunks: ['main'],
+            }),
+          ]
+        : []),
+      ...(isDevServer
+        ? [
+            new FriendlyErrorsPlugin({
+              compilationSuccessInfo: {
+                notes: [`Application is running at http://localhost:${port}\n`],
+              },
+            }),
+          ]
+        : []),
+      ...(isClient
+        ? [
+            ...(isPublic
+              ? [
+                  new CopyWebpackPlugin({
+                    patterns: [
+                      {
+                        from: publicPath,
+                        to: outputPath,
+                      },
+                    ],
+                  }),
+                ]
+              : []),
+            new CompressionPlugin(),
+            new LoadablePlugin(),
+            new HashPlugin({
+              fileName: 'hash.txt',
+              path: outputPath,
+            }),
+            ...(isDevelopment ? [new StatsPlugin()] : []),
+          ]
+        : []),
+      ...(isServer
+        ? [
+            new LimitChunkCountPlugin({
+              maxChunks: 1,
+            }),
+          ]
+        : []),
     ],
   };
 };
