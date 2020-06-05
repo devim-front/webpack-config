@@ -298,7 +298,6 @@ const createConfig = (_env, args, options = {}) => {
                 {
                   loader: 'file-loader',
                   options: {
-                    esModule: false,
                     outputPath: outputFiles,
                     emitFile: isClient,
                   },
