@@ -78,8 +78,7 @@ const createConfig = (_env, args, options = {}) => {
   const isPublic = opts.publicPath !== false;
 
   const tsConfigPath = path.resolve(context, 'tsconfig.json');
-  const modulesPath = path.resolve(context, 'node_modules');
-  const cachePath = path.resolve(modulesPath, '.cache');
+  const cachePath = path.resolve(context, 'node_modules', '.cache');
   const sourcePath = path.resolve(context, opts.sourcePath);
   const outputPath = path.resolve(context, opts.outputPath);
   const publicPath = isPublic
@@ -158,7 +157,7 @@ const createConfig = (_env, args, options = {}) => {
     },
     resolve: {
       extensions: entryExtensions,
-      modules: [sourcePath, modulesPath],
+      modules: [sourcePath, 'node_modules'],
       plugins: [new TsConfigPathsPlugin({ configFileName: tsConfigPath })],
     },
     optimization: {
