@@ -175,8 +175,14 @@ const createConfig = (_env, args, options = {}) => {
       ...(isClient
         ? {
             splitChunks: {
-              maxSize: 244 * 1024,
+              automaticNameDelimiter: '-',
               chunks: 'all',
+              cacheGroups: {
+                vendors: {
+                  test: /[\\/]node_modules[\\/]/,
+                  enforce: true,
+                },
+              },
             },
           }
         : {}),
