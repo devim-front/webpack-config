@@ -174,21 +174,9 @@ const createConfig = (_env, args, options = {}) => {
       ],
       ...(isClient
         ? {
-            runtimeChunk: 'single',
             splitChunks: {
+              maxSize: 244 * 1024,
               chunks: 'all',
-              maxInitialRequests: Infinity,
-              minSize: 0,
-              cacheGroups: {
-                vendor: {
-                  test: /[\\/]node_modules[\\/]/,
-                  name: ({ context }) => {
-                    const pattern = /[\\/]node_modules[\\/](.*?)([\\/]|$)/;
-                    const [, name] = context.match(pattern);
-                    return `npm.${name.replace('@', '')}`;
-                  },
-                },
-              },
             },
           }
         : {}),
