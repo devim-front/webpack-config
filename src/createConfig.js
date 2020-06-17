@@ -121,12 +121,10 @@ const createConfig = (_env, args, options = {}) => {
       path: outputPath,
       publicPath: '/',
       ...(isClient
-        ? [
-            {
-              chunkFilename: `${getFolder(outputJs)}[id].js?[contenthash]`,
-            },
-          ]
-        : []),
+        ? {
+            chunkFilename: `${getFolder(outputJs)}[id].js?[contenthash]`,
+          }
+        : {}),
       ...(isServer
         ? {
             libraryTarget: 'commonjs2',
