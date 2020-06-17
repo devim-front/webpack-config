@@ -19,7 +19,13 @@ const HashPlugin = require('hash-webpack-plugin');
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
 const LoadablePlugin = require('@loadable/webpack-plugin');
 
-const { stringifyEnv, filterEnv, findFile, readEnv } = require('./helpers');
+const {
+  stringifyEnv,
+  getFolder,
+  filterEnv,
+  findFile,
+  readEnv,
+} = require('./helpers');
 
 const { LimitChunkCountPlugin } = optimize;
 
@@ -49,8 +55,8 @@ const createConfig = (_env, args, options = {}) => {
     entry: isClient ? 'index' : 'server/index',
     outputFiles: 'files',
     outputHtml: 'index.html',
-    outputCss: 'css/[name].[contenthash].css',
-    outputJs: isClient ? 'js/[name].[contenthash].js' : 'server.js',
+    outputCss: 'css/[name].css?[contenthash]',
+    outputJs: isClient ? 'js/[name].js?[contenthash]' : 'server.js',
     proxy: {},
     port: 8000,
     server: {},
@@ -114,6 +120,13 @@ const createConfig = (_env, args, options = {}) => {
       filename: outputJs,
       path: outputPath,
       publicPath: '/',
+      ...(isClient
+        ? [
+            {
+              chunkFilename: `${getFolder(outputJs)}[id].js?[contenthash]`,
+            },
+          ]
+        : []),
       ...(isServer
         ? {
             libraryTarget: 'commonjs2',
@@ -315,6 +328,11 @@ const createConfig = (_env, args, options = {}) => {
         filename: outputCss,
         ignoreOrder: true,
         esModule: true,
+        ...(isClient
+          ? {
+              chunkFilename: `${getFolder(outputCss)}[id].js?[contenthash]`,
+            }
+          : {}),
       }),
       ...(isTemplate
         ? [
