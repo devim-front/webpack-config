@@ -328,7 +328,7 @@ const createConfig = (_env, args, options = {}) => {
         esModule: true,
         ...(isClient
           ? {
-              chunkFilename: `${getFolder(outputCss)}[id].js?[contenthash]`,
+              chunkFilename: `${getFolder(outputCss)}[id].css?[contenthash]`,
             }
           : {}),
       }),
