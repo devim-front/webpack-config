@@ -14,7 +14,6 @@ const {
 } = require('awesome-typescript-loader');
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
-const StatsPlugin = require('webpack-visualizer-plugin');
 const HashPlugin = require('hash-webpack-plugin');
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
 const LoadablePlugin = require('@loadable/webpack-plugin');
@@ -247,7 +246,7 @@ const createConfig = (_env, args, options = {}) => {
               use: [],
             },
             {
-              test: /\.(html|ejs)$/,
+              test: /\.html$/,
               use: [],
             },
             {
@@ -364,13 +363,12 @@ const createConfig = (_env, args, options = {}) => {
                   }),
                 ]
               : []),
-            new CompressionPlugin({ test: /\.(js|css)$/ }),
             new LoadablePlugin(),
             new HashPlugin({
               fileName: 'hash.txt',
               path: outputPath,
             }),
-            ...(isDevelopment ? [new StatsPlugin()] : []),
+            new CompressionPlugin({ test: /\.(js|css)(\?.*)?$/ }),
           ]
         : []),
       ...(isServer
