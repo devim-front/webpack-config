@@ -133,7 +133,7 @@ const createConfig = (_env, args, options = {}) => {
     },
     externals: isServer ? [externals()] : undefined,
     stats: { children: false },
-    devtool: isDevelopment && isClient ? 'source-map' : undefined,
+    devtool: isDevelopment && isClient ? 'source-map' : false,
     devServer: {
       proxy,
       quiet: true,
