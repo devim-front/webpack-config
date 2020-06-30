@@ -364,7 +364,7 @@ const createConfig = (_env, args, options = {}) => {
                   }),
                 ]
               : []),
-            new CompressionPlugin(),
+            new CompressionPlugin({ test: /\.(js|css)$/ }),
             new LoadablePlugin(),
             new HashPlugin({
               fileName: 'hash.txt',
