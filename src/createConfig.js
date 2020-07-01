@@ -83,7 +83,8 @@ const createConfig = (_env, args, options = {}) => {
   const isPublic = opts.publicPath !== false;
 
   const tsConfigPath = path.resolve(context, 'tsconfig.json');
-  const cachePath = path.resolve(context, 'node_modules', '.cache');
+  const modulesPath = path.resolve(context, 'node_modules');
+  const cachePath = path.resolve(modulesPath, '.cache');
   const sourcePath = path.resolve(context, opts.sourcePath);
   const outputPath = path.resolve(context, opts.outputPath);
   const publicPath = isPublic
@@ -93,7 +94,7 @@ const createConfig = (_env, args, options = {}) => {
   const entryExtensions = ['.tsx', '.ts', '.jsx', '.js', '.json'];
   const entry = findFile(sourcePath, entryExtensions, opts.entry);
 
-  const templateExtensions = ['.ejs', '.html'];
+  const templateExtensions = ['.html'];
   const template = findFile(sourcePath, templateExtensions, opts.entry);
   const isTemplate = template != null;
 
@@ -278,25 +279,25 @@ const createConfig = (_env, args, options = {}) => {
                   },
                 },
                 {
-                  loader: 'resolve-url-loader',
-                  options: {
-                    root: sourcePath,
-                  },
-                },
-                {
                   loader: 'postcss-loader',
                   options: {
                     sourceMap: isDevelopment,
                   },
                 },
                 {
+                  loader: 'resolve-url-loader',
+                  options: {
+                    root: sourcePath,
+                  },
+                },
+                {
                   loader: 'sass-loader',
                   options: {
-                    sourceMap: isDevelopment,
+                    sourceMap: true,
                     implementation: sass,
                     sassOptions: {
                       fiber: Fiber,
-                      includePaths: [sourcePath],
+                      includePaths: [sourcePath, modulesPath],
                     },
                   },
                 },
