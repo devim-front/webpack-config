@@ -251,7 +251,7 @@ const createConfig = (_env, args, options = {}) => {
               use: [],
             },
             {
-              test: /\.(s[ac]|c)ss$/,
+              test: /\.s[ac]ss$/,
               sideEffects: true,
               use: [
                 ...(isClient
@@ -279,15 +279,16 @@ const createConfig = (_env, args, options = {}) => {
                   },
                 },
                 {
-                  loader: 'postcss-loader',
+                  loader: 'resolve-url-loader',
                   options: {
+                    root: sourcePath,
                     sourceMap: isDevelopment,
                   },
                 },
                 {
-                  loader: 'resolve-url-loader',
+                  loader: 'postcss-loader',
                   options: {
-                    root: sourcePath,
+                    sourceMap: true,
                   },
                 },
                 {
@@ -299,6 +300,48 @@ const createConfig = (_env, args, options = {}) => {
                       fiber: Fiber,
                       includePaths: [sourcePath, modulesPath],
                     },
+                  },
+                },
+              ],
+            },
+            {
+              test: /\.css$/,
+              sideEffects: true,
+              use: [
+                ...(isClient
+                  ? [
+                      {
+                        loader: CssPlugin.loader,
+                        options: {
+                          hmr: isDevServer,
+                        },
+                      },
+                    ]
+                  : []),
+                {
+                  loader: 'css-loader',
+                  options: {
+                    sourceMap: isDevelopment,
+                    localsConvention: 'camelCase',
+                    modules: {
+                      localIdentName: isDevelopment
+                        ? '[name]_[local]_[hash:8]'
+                        : '[hash:base64]',
+                    },
+                    onlyLocals: isServer,
+                    esModule: true,
+                  },
+                },
+                {
+                  loader: 'resolve-url-loader',
+                  options: {
+                    root: sourcePath,
+                  },
+                },
+                {
+                  loader: 'postcss-loader',
+                  options: {
+                    sourceMap: true,
                   },
                 },
               ],
