@@ -1,6 +1,6 @@
 {
   "name": "@devim-front/webpack-config",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "description": "Конфигурация Webpack для проектов на TS+React.",
   "main": "index.js",
   "publishConfig": {
