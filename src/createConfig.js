@@ -24,6 +24,7 @@ const {
   filterEnv,
   findFile,
   readEnv,
+  relativeGlob,
 } = require('./helpers');
 
 const { LimitChunkCountPlugin } = optimize;
@@ -230,7 +231,7 @@ const createConfig = (_env, args, options = {}) => {
                       'awesome-typescript-loader'
                     ),
                     reportFiles: [
-                      path.relative(
+                      relativeGlob(
                         context,
                         path.resolve(sourcePath, '**/*.{tsx,ts}')
                       ),

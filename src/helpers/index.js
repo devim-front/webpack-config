@@ -4,4 +4,5 @@ module.exports = {
   ...require('./readEnv'),
   ...require('./stringifyEnv'),
   ...require('./findFile'),
+  ...require('./relativeGlob'),
 };
